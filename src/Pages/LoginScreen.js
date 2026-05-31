@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth"
 import firebase from "../firebase/firebase"
 import Logo from "../components/Logo/Logo"
@@ -35,18 +35,17 @@ const LoginScreen = ({ setIsSigned }) => {
 		},
 	}
 
-	const usersRef = firebase.firestore().collection("Users")
-
-	const userRecord = (user, extra = {}) => ({
+	const userRecord = useCallback((user, extra = {}) => ({
 		uid: user.uid,
 		name: extra.name || user.displayName || "",
 		email: (user.email || extra.email || "").toLowerCase(),
 		photoURL: user.photoURL || "",
 		provider: user.providerData[0] ? user.providerData[0].providerId : "password",
 		updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-	})
+	}), [])
 
-	const ensureGoogleUser = async (user) => {
+	const ensureGoogleUser = useCallback(async (user) => {
+		const usersRef = firebase.firestore().collection("Users")
 		const userDoc = usersRef.doc(user.uid)
 		const snapshot = await userDoc.get()
 		if (!snapshot.exists) {
@@ -57,7 +56,7 @@ const LoginScreen = ({ setIsSigned }) => {
 		} else {
 			await userDoc.update(userRecord(user))
 		}
-	}
+	}, [userRecord])
 
 	const handleEmailAuth = async (event) => {
 		event.preventDefault()
@@ -65,6 +64,8 @@ const LoginScreen = ({ setIsSigned }) => {
 		setAuthLoading(true)
 
 		try {
+			const usersRef = firebase.firestore().collection("Users")
+
 			if (emailMode === "signup") {
 				creatingEmailUser.current = true
 				const credential = await firebase
@@ -119,6 +120,7 @@ const LoginScreen = ({ setIsSigned }) => {
 					await ensureGoogleUser(user)
 					setIsSigned(true)
 				} else if (!creatingEmailUser.current) {
+					const usersRef = firebase.firestore().collection("Users")
 					const snapshot = await usersRef.doc(user.uid).get()
 					if (snapshot.exists) {
 						setIsSigned(true)
@@ -134,7 +136,7 @@ const LoginScreen = ({ setIsSigned }) => {
 			if (isMounted) setLoading(false)
 		})
 		return () => (isMounted = false)
-	}, [setIsSigned])
+	}, [ensureGoogleUser, setIsSigned])
 	return (
 		<div>
 			{loading ? (
