@@ -154,10 +154,10 @@ const LoginScreen = ({ setIsSigned }) => {
 					<Particles className="particles" params={particlesOptions} />
 					<Logo></Logo>
 					<div className="firebaseUI">
-						<StyledFirebaseAuth
+						{/* <StyledFirebaseAuth
 							uiConfig={uiConfig}
 							firebaseAuth={firebase.auth()}
-						/>
+						/> */}
 						<div className="emailAuth">
 							{!emailMode ? (
 								<button
