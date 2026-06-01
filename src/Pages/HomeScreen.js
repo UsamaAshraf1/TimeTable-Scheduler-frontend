@@ -16,6 +16,7 @@ import GenerateTimetable from '../components/GenerateTimetable';
 import './HomeScreen.css';
 import docs from '../constants/docs';
 import firebase from 'firebase';
+import { buildTimetable } from '../utils/timetableScheduler';
 
 const useStyles = makeStyles((theme) => ({
   cardHolder: {
@@ -163,23 +164,40 @@ const HomeScreen = () => {
     fetchTimetable();
   }, [fetchRecords, fetchTimetable]);
 
-  const generateButton = () => {
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userID: firebase.auth().currentUser.uid }),
-    };
+  const generateButton = async () => {
     setloading(true);
-    fetch('/generate', requestOptions)
-      .then((response) => response.json())
-      .then(async () => {
-        fetchTimetable();
-        setloading(false);
-      })
-      .catch((e) => {
-        console.log(e);
-        setloading(false);
+
+    try {
+      const { sections, timetable: generatedTimetable } = buildTimetable({
+        lectures,
+        subjects,
+        workingTime,
       });
+      const timeTableRef = userRef.doc(docs.timeTable).collection(docs.timeTable);
+      const snapTimetable = await timeTableRef.get();
+      const deleteBatch = db.batch();
+
+      snapTimetable.docs.forEach((doc) => deleteBatch.delete(doc.ref));
+
+      if (!snapTimetable.empty) {
+        await deleteBatch.commit();
+      }
+
+      const writeBatch = db.batch();
+
+      sections.forEach((section) => {
+        writeBatch.set(timeTableRef.doc(section), {
+          ...Object(generatedTimetable[section].map((row) => Object(row))),
+        });
+      });
+
+      await writeBatch.commit();
+      setTimetable(generatedTimetable);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setloading(false);
+    }
   };
   // console.log(subjects);
   // console.log(sections);
