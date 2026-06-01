@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth"
+// import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth"
 import firebase from "../firebase/firebase"
 import Logo from "../components/Logo/Logo"
 import Particles from "react-particles-js"
@@ -27,13 +27,13 @@ const LoginScreen = ({ setIsSigned }) => {
 	const [authLoading, setAuthLoading] = useState(false)
 	const creatingEmailUser = useRef(false)
 
-	let uiConfig = {
-		signInFlow: "popup",
-		signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID],
-		callbacks: {
-			signInSuccessWithAuthResult: () => false,
-		},
-	}
+	// let uiConfig = {
+	// 	signInFlow: "popup",
+	// 	signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID],
+	// 	callbacks: {
+	// 		signInSuccessWithAuthResult: () => false,
+	// 	},
+	// }
 
 	const userRecord = useCallback((user, extra = {}) => ({
 		uid: user.uid,
